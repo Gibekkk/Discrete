@@ -1,8 +1,8 @@
 import random
 
 # Generate binary keys dari satu key yang sama
-def generate_keys(key, num_keys, length):
-    random.seed(key)  # Seed berdasarkan key yang sama
+def generate_keys(key_bin, num_keys, length):
+    random.seed(key_bin)  # Seed berdasarkan binary dari key string
     return [[random.randint(0, 1) for _ in range(length)] for _ in range(num_keys)]
 
 # XOR operation
@@ -22,8 +22,13 @@ def binary_to_text(binary_data):
 # Enkripsi dengan XOR chain
 def encrypt(text, key, num_keys):
     text_bin = text_to_binary(text)
+    key_bin = text_to_binary(key)  # Convert key string ke binary
     length = len(text_bin)
-    keys = generate_keys(key, num_keys, length)
+    
+    # Jika key lebih pendek dari text, perlu ulang keynya
+    full_key_bin = (key_bin * ((length // len(key_bin)) + 1))[:length]
+
+    keys = generate_keys(display_binary(full_key_bin), num_keys, length)
 
     # XOR chain (((A ^ B1) ^ B2) ^ B3) ...
     cypher_bin = text_bin
@@ -33,12 +38,14 @@ def encrypt(text, key, num_keys):
     return cypher_bin
 
 # Dekripsi dari teks cipher
-def decrypt(cypher_text, key, num_keys):
-    # Convert cipher text to binary
-    cypher_bin = text_to_binary(cypher_text)
-    
+def decrypt(cypher_bin, key, num_keys):
+    key_bin = text_to_binary(key)  # Convert key string ke binary
     length = len(cypher_bin)
-    keys = generate_keys(key, num_keys, length)
+
+    # Ulang key jika lebih pendek
+    full_key_bin = (key_bin * ((length // len(key_bin)) + 1))[:length]
+
+    keys = generate_keys(display_binary(full_key_bin), num_keys, length)
 
     # XOR chain reverse (((Cypher ^ B4) ^ B3) ^ B2) ...
     original_bin = cypher_bin
@@ -47,19 +54,33 @@ def decrypt(cypher_text, key, num_keys):
 
     return original_bin
 
+# Tampilin binary dengan format yang lebih rapi
+def display_binary(bin_data):
+    return ''.join(str(b) for b in bin_data)
+
 # Input teks dan key
 A = "Hello World"
-key = 1  # Bisa lu set sembarangan
+key = "dlroW olleH"
 num_keys = 4
 
 # Enkripsi
+print("Original Text:", A)
+text_bin = text_to_binary(A)
+print("Binary Text:", display_binary(text_bin))
+
 cypher_bin = encrypt(A, key, num_keys)
 cypher_text = binary_to_text(cypher_bin)
 
-print("Ciphertext:", cypher_text)
+# Key ke binary
+binary_key = text_to_binary(key)
+print("Secret Key (Binary):", display_binary(binary_key))
 
-# Decrypt
-decrypted_bin = decrypt(cypher_text, key, num_keys)
+print("Ciphertext Binary:", display_binary(cypher_bin))
+print("Ciphertext (Encoded as Text):", cypher_text)
+
+# Decrypt dari binary langsung
+decrypted_bin = decrypt(cypher_bin, key, num_keys)
 decrypted_text = binary_to_text(decrypted_bin)
 
-print("Decrypted text:", decrypted_text)
+print("Decrypted Binary:", display_binary(decrypted_bin))
+print("Decrypted Text:", decrypted_text)
